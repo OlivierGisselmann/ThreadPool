@@ -17,4 +17,8 @@ target_include_directories(${PROJECT_NAME} INTERFACE
 )
 
 # Tests and benchmarks
-add_subdirectory(tests)
+option(BUILD_TESTS "Build unit tests and benchmarks" ON)
+
+if(BUILD_TESTS)
+    add_subdirectory(tests)
+endif()
