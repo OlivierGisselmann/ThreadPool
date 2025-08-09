@@ -1,0 +1,7 @@
+# Build directories
+out/*
+build/*
+
+# IDE config folders
+.vs/*
+.vscode/*
