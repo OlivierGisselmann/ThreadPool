@@ -4,6 +4,17 @@
 
 #include <thread>
 
+TEST_CASE( "Empty() ring buffer returns value", "[ring_buffer]")
+{
+    ThreadPool::RingBuffer<int, 5> queue;
+
+    REQUIRE(queue.Empty() == true);
+
+    queue.Push(1);
+
+    REQUIRE(queue.Empty() == false);
+}
+
 TEST_CASE( "Pop empty ring buffer returns false", "[ring_buffer]")
 {
     ThreadPool::RingBuffer<int, 5> queue;

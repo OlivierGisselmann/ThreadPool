@@ -19,6 +19,9 @@ namespace ThreadPool
             // Push item into array
             mData[mWrite] = item;
             mWrite = (mWrite + 1) % capacity;
+
+            ++mCounter;
+
             return true;
         }
 
@@ -30,15 +33,17 @@ namespace ThreadPool
             if(mRead == mWrite)
                 return false;
 
-            // 
+            // Pop item from array
             item = mData[mRead];
             mRead = (mRead + 1) % capacity;
+
+            --mCounter;
             return true;
         }
 
         inline bool Empty() const noexcept
         {
-            return mRead == mWrite;
+            return mCounter == 0;
         }
 
     private:
@@ -46,5 +51,6 @@ namespace ThreadPool
         std::size_t mRead = 0;
         std::size_t mWrite = 0;
         std::mutex mLock;
+        int mCounter = 0;
     };
 }
