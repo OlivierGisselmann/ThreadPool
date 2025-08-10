@@ -18,6 +18,8 @@ A minimal, modern C++ thread pool implementation that uses:
 
 ## Architecture
 
+![sequence diagram](sequence_diagram.png "Sequence Diagram")
+
 ### Task Submission
 - Tasks are pushed into a thread-safe ring buffer
 - A std::packaged_task wraps the callable so that its return value can be retrieved via std::future
