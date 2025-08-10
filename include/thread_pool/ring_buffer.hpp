@@ -36,6 +36,11 @@ namespace ThreadPool
             return true;
         }
 
+        inline bool Empty() const noexcept
+        {
+            return mRead == mWrite;
+        }
+
     private:
         T mData[capacity];
         std::size_t mRead = 0;
