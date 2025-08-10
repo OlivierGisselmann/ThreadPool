@@ -17,6 +17,7 @@ A minimal, modern C++ thread pool implementation that uses:
 - TODO: **Work stealing** — idle threads can steal work from other thread's queues
 
 ## Architecture
+
 ### Task Submission
 - Tasks are pushed into a thread-safe ring buffer
 - A std::packaged_task wraps the callable so that its return value can be retrieved via std::future
@@ -60,6 +61,7 @@ int main() {
 ```
 
 ## Build instructions
+
 This project comes with a CMake integration option. If you wish to link this as an **INTERFACE** library, you just need to build with CMake and link **ThreadPool** against your executable.
 ```
 # Build the interface only
@@ -70,8 +72,10 @@ cmake -S . -B out -G Ninja -DBUILD_TESTS=ON
 ```
 
 ## Requirements
+
 - C++17 or newer
 - CMake 3.12 or newer (if using CMake integration)
 
 ## Credits
+
 TODO - Add resources used for this project
