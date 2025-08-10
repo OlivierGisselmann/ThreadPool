@@ -45,6 +45,10 @@ namespace ThreadPool
             }
         }
 
+        // Deleted copy constructor & copy assignment operator
+        ThreadPool(const ThreadPool&) = delete;
+        ThreadPool& operator=(const ThreadPool&) = delete;
+
         ~ThreadPool()
         {
             for(auto& thread : mThreads)
