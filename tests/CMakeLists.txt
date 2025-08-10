@@ -12,7 +12,7 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(Catch2)
 
 # Create executable from sources
-add_executable(${PROJECT_NAME} ringbuffer_test.cpp)
+add_executable(${PROJECT_NAME} ringbuffer_test.cpp threadpool_test.cpp)
 
 # Link libraries to executable
 target_link_libraries(${PROJECT_NAME} PRIVATE Catch2::Catch2WithMain ThreadPool)
