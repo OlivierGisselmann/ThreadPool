@@ -2,10 +2,11 @@
 
 #include <thread_pool/ring_buffer.hpp>
 
+#include <thread>
+
 TEST_CASE( "Pop empty ring buffer returns false", "[ring_buffer]")
 {
     ThreadPool::RingBuffer<int, 5> queue;
-
     int result = 0;
 
     REQUIRE(queue.Pop(result) == false);
@@ -24,7 +25,6 @@ TEST_CASE( "Ring buffer pushes and pops", "[ring_buffer]" )
 {
     // Create a ring queue with 50 int slots
     ThreadPool::RingBuffer<int, 50> queue;
-
     int result = 0;
 
     // Can fill the queue
@@ -44,7 +44,6 @@ TEST_CASE( "Ring buffer pushes and pops", "[ring_buffer]" )
 TEST_CASE( "Ring buffer has correct values", "[ring_buffer]")
 {
     ThreadPool::RingBuffer<int, 4> queue;
-
     int result = 0;
 
     // FIFO
@@ -60,4 +59,28 @@ TEST_CASE( "Ring buffer has correct values", "[ring_buffer]")
 
     queue.Pop(result);
     REQUIRE(result == 96);
+}
+
+TEST_CASE( "Ring buffer is thread safe", "[ring_buffer]")
+{
+    ThreadPool::RingBuffer<int, 5> queue;
+    int result = 0;
+
+    std::thread first([&queue]
+    {
+        queue.Push(1);
+    });
+
+    std::thread second([&queue, &result]
+    {
+        queue.Pop(result);
+        queue.Push(2);
+    });
+
+    first.join();
+    second.join();
+
+    REQUIRE(result == 1);
+    queue.Pop(result);
+    REQUIRE(result == 2);
 }
