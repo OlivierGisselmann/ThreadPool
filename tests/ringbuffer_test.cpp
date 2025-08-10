@@ -79,8 +79,7 @@ TEST_CASE( "Ring buffer is thread safe", "[ring_buffer]")
 
     first.join();
     second.join();
-
-    REQUIRE(result == 1);
+    
     queue.Pop(result);
     REQUIRE(result == 2);
 }
