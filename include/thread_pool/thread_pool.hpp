@@ -15,12 +15,15 @@ namespace ThreadPool
     class ThreadPool
     {
     public:
-        ThreadPool(std::size_t desiredThreads = std::thread::hardware_concurrency())
+        explicit ThreadPool(std::size_t desiredThreads = std::thread::hardware_concurrency())
         : mShutdown(false), mQueuedTasks(0)
         {
             mCompletedTasks.store(0);
 
             auto numThreads = std::max((std::size_t)1, desiredThreads);
+
+            // Allocate space for threads
+            mThreads.reserve(numThreads);
 
             // Create x threads with fetch task loop running inside
             for(std::size_t i = 0; i < numThreads; ++i)
