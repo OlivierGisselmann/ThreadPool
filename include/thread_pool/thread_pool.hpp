@@ -4,6 +4,7 @@
 #include <atomic>
 #include <condition_variable>
 #include <functional>
+#include <future>
 #include <thread>
 #include <vector>
 
@@ -21,34 +22,47 @@ namespace ThreadPool
 
             auto numThreads = std::max((std::size_t)1, desiredThreads);
 
+            // Create x threads with fetch task loop running inside
             for(std::size_t i = 0; i < numThreads; ++i)
             {
                 mThreads.emplace_back([this]{
                     std::function<void()> task;
 
-                    while(!mShutdown)
+                    for(;;)
                     {
-                        auto result = mTaskQueue.Pop(task);
+                        std::function<void()> task;
 
-                        if(result)
-                        {
-                            task();
-                            mCompletedTasks.fetch_add(1);
-                        }
-                        else
                         {
                             std::unique_lock<std::mutex> lock(mLock);
-                            mWakeUp.wait(lock);
+
+                            mWakeUp.wait(lock, [this]()
+                            {
+                                return mShutdown || !mTaskQueue.Empty();
+                            });
+
+                            if(mShutdown && mTaskQueue.Empty())
+                                break;
+
+                            if(mTaskQueue.Empty())
+                                continue;
+
+                            mTaskQueue.Pop(task);
                         }
+
+                        task();
+                        mCompletedTasks.fetch_add(1);
                     }
                 });
             }
         }
 
-        // Deleted copy constructor & copy assignment operator
+        // Deleted copy constructor, copy assignment operator and move constructor
+        ThreadPool(ThreadPool&) = delete;
         ThreadPool(const ThreadPool&) = delete;
+        ThreadPool& operator=(ThreadPool&&) = delete;
         ThreadPool& operator=(const ThreadPool&) = delete;
 
+        // Ensure all threads are joined when destroying
         ~ThreadPool()
         {
             for(auto& thread : mThreads)
@@ -58,17 +72,31 @@ namespace ThreadPool
             }
         }
 
-        inline void Submit(const std::function<void()>& task)
+        // Using auto to define return type at compile time
+        template<typename F, typename... Args>
+        inline auto Submit(F&& f, Args&&... args) ->std::future<decltype(f(args...))>
         {
+            auto func = std::bind(std::forward<F>(f), std::forward<Args>(args)...);
+            auto funcPtr = std::make_shared<std::packaged_task<decltype(f(args...))()>>(func);
+
+            std::future<std::result_of_t<F(Args...)>> futureObject = funcPtr->get_future();
+
             ++mQueuedTasks;
 
-            // Try to push task until it works
-            while(!mTaskQueue.Push(task))
+            // Push new task to queue
+            while(!mTaskQueue.Push(
+                [funcPtr]()
+                {
+                    (*funcPtr)();
+                }
+            ))
             {
                 Poll();
             }
 
             mWakeUp.notify_one();
+
+            return futureObject;
         }
 
         inline void Wait() noexcept
@@ -84,6 +112,7 @@ namespace ThreadPool
         }
 
     private:
+        // Put current thread to sleep and wake another one
         inline void Poll() noexcept
         {
             mWakeUp.notify_one();
