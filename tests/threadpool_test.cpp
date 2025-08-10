@@ -2,18 +2,43 @@
 
 #include <thread_pool/thread_pool.hpp>
 
-TEST_CASE( "ThreadPool can submit work to threads", "[thread_pool]")
+#include <iostream>
+
+TEST_CASE( "ThreadPool can submit work to multiple threads", "[thread_pool]")
 {
     ThreadPool::ThreadPool pool(4);
 
-    int counter = 0;
+    for(int i = 0; i < 8; ++i)
+    {
+        pool.Submit([i]{
+            return i + i;
+        });
+    }
 
-    pool.Submit([&]{ ++counter; });
-    pool.Submit([&]{ ++counter; });
-    pool.Submit([&]{ ++counter; });
-    pool.Submit([&]{ ++counter; });
-    
+    pool.Wait();
+}
+
+TEST_CASE( "ThreadPool returns values with std::future", "[thread_pool]")
+{
+    ThreadPool::ThreadPool pool;
+
+    std::vector<std::future<int>> results;
+
+    for(int i = 0; i < 8; ++i)
+    {
+        auto future = pool.Submit([i]{
+            return i + i;
+        });
+
+        results.emplace_back(std::move(future));
+    }
+
     pool.Wait();
 
-    REQUIRE(counter == 4);
+    for(auto& result : results)
+    {
+        static int i = 0;
+        REQUIRE(result.get() == i + i);
+        ++i;
+    }
 }
