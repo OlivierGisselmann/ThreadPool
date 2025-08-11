@@ -42,3 +42,32 @@ TEST_CASE( "ThreadPool returns values with std::future", "[thread_pool]")
         ++i;
     }
 }
+
+TEST_CASE( "ThreadPool dispatch to multiple groups", "[thread_pool]")
+{
+    struct Data
+    {
+        float m[16];
+        void Compute(uint32_t value)
+        {
+            for (int i = 0; i < 16; ++i)
+            {
+                m[i] += float(value + i);
+            }
+        }
+    };
+
+    ThreadPool::ThreadPool pool;
+
+    const auto dataCount = 100000;
+    const auto groupSize = 10000;
+    Data* dataSet = new Data[dataCount];
+
+    pool.Dispatch(dataCount, groupSize, [&dataSet](ThreadPool::TaskDispatchArgs args){
+        dataSet[args.taskIndex].Compute(1);
+    });
+
+    pool.Wait();
+
+    delete[] dataSet;
+}
