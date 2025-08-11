@@ -75,7 +75,7 @@ cmake -S . -B out -G Ninja -DBUILD_TESTS=ON
 
 ## Requirements
 
-- C++17 or newer
+- C++20 or newer
 - CMake 3.12 or newer (if using CMake integration)
 
 ## Credits
