@@ -12,6 +12,12 @@
 
 namespace ThreadPool
 {
+    struct TaskDispatchArgs
+    {
+        std::uint32_t taskIndex;
+        std::uint32_t groupIndex;
+    };
+
     class ThreadPool
     {
     public:
@@ -100,6 +106,46 @@ namespace ThreadPool
             mWakeUp.notify_one();
 
             return futureObject;
+        }
+
+        // Dispatch work to multiple groups
+        inline void Dispatch(std::uint32_t taskCount, std::uint32_t groupSize, const std::function<void(TaskDispatchArgs)>& task)
+        {
+            if(taskCount == 0 || groupSize == 0)
+                return;
+
+            // Ceil amount of job groups
+            const std::uint32_t groupCount = (taskCount + groupSize - 1) / groupSize;
+
+            mQueuedTasks += groupCount;
+
+            for(std::uint32_t groupIndex = 0; groupIndex < groupCount; ++groupIndex)
+            {
+                // Generate one task per group
+                const auto& jobGroup = [taskCount, groupSize, task, groupIndex]()
+                {
+                    const std::uint32_t groupJobOffset = groupIndex * groupSize;
+                    const std::uint32_t groupJobEnd = std::min(groupJobOffset + groupSize, taskCount);
+
+                    TaskDispatchArgs args;
+                    args.groupIndex = groupIndex;
+
+                    for(std::uint32_t i = groupJobOffset; i < groupJobEnd; ++i)
+                    {
+                        args.taskIndex = i;
+                        task(args);
+                    }
+                };
+
+                // Push task to queue
+                while(!mTaskQueue.Push(jobGroup))
+                {
+                    Poll();
+                }
+
+                // Wake up one thread
+                mWakeUp.notify_all();
+            }
         }
 
         inline void Wait() noexcept
