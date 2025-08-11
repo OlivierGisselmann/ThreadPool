@@ -13,7 +13,7 @@ A minimal, modern C++ thread pool implementation that uses:
 - **Thread-safe queue** — implemented via a ring buffer for efficient task storage
 - **RAII worker management** — pool spawns and joins threads on creation/destruction
 - **Minimal dependencies** — uses only the C++ standard library
-- TODO: **Group dispatch** — submit work load as a batch to reduce synchronization overhead
+- **Group dispatch** — submit work load as a batch to reduce synchronization overhead
 - TODO: **Work stealing** — idle threads can steal work from other thread's queues
 
 ## Architecture
