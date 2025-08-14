@@ -1,7 +1,5 @@
 # Thread Pool
 
-**-- WORK IN PROGRESS --**
-
 A minimal, modern C++ thread pool implementation that uses:
 - **Thread-safe ring buffer** for task queuing
 - **Worker threads** automatically managed to pull and execute tasks
